@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>True Color</title>
+  <meta charset=utf-8 />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="stylesheet" href="css/main.css" type="text/css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.1/socket.io.js"
+    integrity="sha512-oFOCo2/3DtjrJG4N27BjSLQWoiBv171sK6a+JiWjp/7agxC2nCUP358AqzxkBUb5jX8g6CYLPdSKQTbC0weCwA=="
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.min.js"></script>
+  <script src="js/playerControls.js"></script>
+  <script src="js/pointerLock.js"></script>
+  <script src="js/scene.js"></script>
+</head>
+
+<body>
+  <div id="infopanel">
+    <div id="infopanel_round">
+      <div id="infopanel_round_col1" class="infopanel_round_col"></div>
+      <div id="infopanel_round_col2" class="infopanel_round_col"></div>
+      <div id="infopanel_round_col3" class="infopanel_round_col"></div>
+    </div>
+    <div id="infopanel_message">
+      <div id="infopanel_message_row1"></div>
+    </div>
+    <div id="infopanel_players">
+      <div id="infopanel_players_col1">
+        <div id="infopanel_players_title"></div>
+        <div id="infopanel_players_rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="blocker" class="unselectable">
+    <div id="instructions">
+      <div id="instructions_rows">
+        <div id="instructions_row_title">
+          <h2 id="instructions_title">Loading...</h2>
+        </div>
+        <div class="instructions_row">
+          <h5>W, A, S, D : Move</h5>
+        </div>
+        <div class="instructions_row">
+          <h5>Space : Jump</h5>
+        </div>
+        <div class="instructions_row">
+          <h5>Mouse : Look around</h5>
+        </div>
+        <div class="instructions_row">
+          <h5>Click : Change body color</h5>
+        </div>
+        <div class="instructions_row">
+          <h5>Esc : Unlock mouse cursor</h5>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="startScreen">
+    <div id="titleArea">
+      <h1>TRUE COLOR</h1>
+    </div>
+    <div id="formArea">
+      <div id="formArea_row1">
+        <h3 id="formArea_label">Enter the player name</h3>
+      </div>
+      <div id="formArea_row2">
+        <div id="formArea_inputArea">
+          <input id="formArea_input" type="text" spellcheck="false" maxlength="8" value=""
+            onkeydown="return playerNameInputKeyDown(event)">
+        </div>
+        <div id="formArea_buttonArea">
+          <button id="formArea_button">START</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="gl_context"></div>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
