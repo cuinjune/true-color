@@ -151,16 +151,17 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 	const ROUND_STATE = {
 		noPlayerExists: 0,
 		waitingForOtherPlayers: 1,
-		startingNewRound: 2,
-		groundColorChanges: 3,
-		roundStarted: 4,
-		instruction1: 5,
-		instruction2: 6,
-		instruction3: 7,
-		silence: 8,
-		roundFinished: 9,
-		announcingWinners: 10,
-		announcingFinalWinner: 11
+		otherUserJoined: 2,
+		startingNewRound: 3,
+		groundColorChanges: 4,
+		roundStarted: 5,
+		instruction1: 6,
+		instruction2: 7,
+		instruction3: 8,
+		silence: 9,
+		roundFinished: 10,
+		announcingWinners: 11,
+		announcingFinalWinner: 12
 	};
 
 	// update current time
@@ -185,17 +186,16 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 
 	// receive round data whenever state changes
 	socket.on("roundStateChanged", _round => {
-
-		if (_round.state === ROUND_STATE.waitingForOtherPlayers) {
+		if (_round.state === ROUND_STATE.waitingForOtherPlayers || _round.state === ROUND_STATE.otherUserJoined) {
 			roundInfo.innerText = "";
 			timeInfo.innerText = "";
 			prizeInfo.innerText = "";
 		}
 		else {
 			roundInfo.innerText = `Round: ${_round.currentNum} / ${_round.totalNum}`;
+			timeInfo.innerText = `Time: ${_round.currentTime}`;
 			prizeInfo.innerText = `Prize: ${dollarFormatter.format(_round.prize)}`;
 		}
-
 		messageInfo.innerText = _round.message;
 	});
 
@@ -356,7 +356,7 @@ function enableOutgoingStream() {
 // three.js
 ////////////////////////////////////////////////////////////////////////////////
 
-function createScene(initPlayerPosition) {
+function createScene(initPlayerPosition, colorIndex) {
 	// initialize three.js scene
 	console.log("Creating three.js scene...");
 	glScene = new Scene(
@@ -366,7 +366,8 @@ function createScene(initPlayerPosition) {
 		_clearColor = "skyblue",
 		_controls = controls,
 		_socket = socket,
-		_initPlayerPosition = initPlayerPosition);
+		_initPlayerPosition = initPlayerPosition,
+		_colorIndex = colorIndex);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -461,7 +462,7 @@ async function startButtonClicked() {
 				addPointerLock();
 
 				// finally create the threejs scene
-				createScene(initPlayerPosition);
+				createScene(initPlayerPosition, colorIndex);
 
 				// click to play
 				document.getElementById("instructions_title").innerText = "Click to play";

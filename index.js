@@ -26,10 +26,7 @@ const server = app.listen(PORT);
 console.log("Server is running localhost on port: " + PORT);
 
 // socket.io
-const io = require("socket.io")({
-  // "transports": ["xhr-polling"],
-  // "polling duration": 0
-}).listen(server);
+const io = require("socket.io")().listen(server);
 
 // Network Traversal
 // Could also use network traversal service here (Twilio, for example):
@@ -48,16 +45,17 @@ let winners = ""; // used to store winners before announcing
 const ROUND_STATE = {
   noPlayerExists: 0,
   waitingForOtherPlayers: 1,
-  startingNewRound: 2,
-  groundColorChanges: 3,
-  roundStarted: 4,
-  instruction1: 5,
-  instruction2: 6,
-  instruction3: 7,
-  silence: 8,
-  roundFinished: 9,
-  announcingWinners: 10,
-  announcingFinalWinner: 11
+  otherUserJoined: 2,
+  startingNewRound: 3,
+  groundColorChanges: 4,
+  roundStarted: 5,
+  instruction1: 6,
+  instruction2: 7,
+  instruction3: 8,
+  silence: 9,
+  roundFinished: 10,
+  announcingWinners: 11,
+  announcingFinalWinner: 12
 };
 
 let round = {
@@ -74,12 +72,13 @@ let round = {
 const ROUND_MESSAGE = {
   noPlayerExists: "",
   waitingForOtherPlayers: "Waiting for other players to join...",
+  otherUserJoined: "A new player just joined, the game will start soon...",
   startingNewRound: "Starting a new round...",
   groundColorChanges: "Setting the ground color...",
   roundStarted: () => { return `Round ${round.currentNum} / ${round.totalNum} started!` },
   instruction1: "Match your body color to the ground color by asking other players by the end of the round.",
   instruction2: "You can change your body color by clicking your left mouse button.",
-  instruction3: "After each round, the prize money will be distributed to winner(s).",
+  instruction3: "After each round, the prize money will be distributed to the winner(s).",
   silence: "",
   roundFinished: () => { return `Round ${round.currentNum} / ${round.totalNum} finished!` },
   announcingWinners: () => { return winners ? `Announcing the winner(s): ${winners}` : "No winner was found in this round." },
@@ -145,22 +144,22 @@ function main() {
       updatePlayerList();
       if (numClients > 1) { // if other user joins, restart the game
         if (numClients > previousNumClients) {
-          resetRound();
-          round.state = ROUND_STATE.startingNewRound;
-          round.message = ROUND_MESSAGE.startingNewRound;
+          round.state = ROUND_STATE.otherUserJoined;
+          round.message = ROUND_MESSAGE.otherUserJoined;
           console.log(round.message);
           io.sockets.emit("roundStateChanged", round);
           startTime = Date.now();
+          shouldCountDown = false; // just in case the countdown was not properly stopped
         }
       }
       else if (numClients === 1) {
         if (round.state !== ROUND_STATE.waitingForOtherPlayers) {
-          resetRound();
           round.state = ROUND_STATE.waitingForOtherPlayers;
           round.message = ROUND_MESSAGE.waitingForOtherPlayers;
           console.log(round.message);
           io.sockets.emit("roundStateChanged", round);
           startTime = Date.now();
+          shouldCountDown = false; // just in case the countdown was not properly stopped
         }
       }
       else { // no player exists
@@ -168,6 +167,7 @@ function main() {
           round.state = ROUND_STATE.noPlayerExists;
           round.message = ROUND_MESSAGE.noPlayerExists;
           console.log(round.message);
+          shouldCountDown = false; // just in case the countdown was not properly stopped
         }
       }
       previousNumClients = numClients;
@@ -177,6 +177,16 @@ function main() {
 
     switch (round.state) {
       case ROUND_STATE.waitingForOtherPlayers:
+        break;
+      case ROUND_STATE.otherUserJoined:
+        if (elapsedTime > 10000) {
+          resetRound();
+          round.state = ROUND_STATE.startingNewRound;
+          round.message = ROUND_MESSAGE.startingNewRound;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
         break;
       case ROUND_STATE.startingNewRound:
         if (elapsedTime > 5000) {
@@ -372,32 +382,7 @@ function main() {
     // update all clients
     io.sockets.emit("updateClientProps", clients);
   }, 100);
-
-
-  /*
-  Waiting for other players to join... (if only 1 player in the room)
-
-  -----------ROUNDS---------------
-  Starting a new round! 3 sec  (whenever new player joins) (all rounds, prizes resets) -> send new pos, color
-
-  (ground color changes rapidly) 5 sec 
-
-  Round 1/10 started! 2 sec (start countdown)
-
-  Match your body color to the ground color by asking other players by the end of the round. 3 sec
-  You can change your body color by clicking your left mouse button. 3 sec
-  After each round, the prize money will be distributed to the winners. 3 sec
-
-  (Silence) until end
-
-  Round 1/10 finished! 2 sec (end countdown, check color, prevent changing color)
-
-  Announcing the winners: Zack, Jason, Mark....: 5 sec (raise the scores)
-
-  */
 }
-
-main();
 
 function setupSocketServer() {
   // socket setup
@@ -484,3 +469,4 @@ function setupSocketServer() {
   });
 }
 
+main(); // call main

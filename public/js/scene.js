@@ -1,5 +1,5 @@
 class Scene {
-	constructor(_domElement, _width, _height, _clearColor, _controls, _socket, _initPlayerPosition) {
+	constructor(_domElement, _width, _height, _clearColor, _controls, _socket, _initPlayerPosition, _colorIndex) {
 		// player control
 		this.controls = _controls;
 
@@ -42,7 +42,8 @@ class Scene {
 			new THREE.Color(0.75, 0.75, 0.75)
 		];
 
-		this.colorIndex = 3; // should get from server
+		// initial color index
+		this.colorIndex = _colorIndex;
 
 		// add lights
 		const light = new THREE.HemisphereLight(new THREE.Color(1, 1, 1), new THREE.Color(0.75, 0.75, 0.75), 1);
