@@ -79,8 +79,9 @@ THREE.PlayerControls = function () {
 
     document.onmousemove = function myFunction() {
         if (this.enabled === false) return;
-        var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-        var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+        const e = event || window.event; // window.event for IE
+        var movementX = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
+        var movementY = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
         this.rotation.y = -movementX * rotationAmountY;
         if (this.rotation.y > -0.02 && this.rotation.y < 0.02) this.rotation.y = 0;
         if (this.rotation.y < -0.2) this.rotation.y = -0.2;

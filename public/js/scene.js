@@ -97,6 +97,7 @@ class Scene {
 
 	addSelf() {
 		this.player = this.getPlayer(this.colors[this.colorIndex], makeVideoMaterial("local"));
+		this.player.visible = false; // make myself invisible
 		this.listener = new THREE.AudioListener();
 		this.player.add(this.listener);
 		this.player.position.set(this.initPlayerPosition.x, this.initPlayerPosition.y, this.initPlayerPosition.z);
@@ -212,8 +213,8 @@ class Scene {
 
 	updateCamera() {
 		// offset from camera to player
-		const mousePositionY = this.controls.rotation.x + 0.5; //normalized to 0 ~ 1
-		const relativeCameraOffset = new THREE.Vector3(0, mousePositionY * 2 - 0.5, -1);
+		const mousePositionY = this.controls.rotation.x;
+		const relativeCameraOffset = new THREE.Vector3(0, mousePositionY * 0.25 + 0.5, 0.2);
 
 		// update player world matrix for perfect camera follow
 		this.player.updateMatrixWorld();
@@ -221,9 +222,11 @@ class Scene {
 		// apply offset to player matrix
 		const cameraOffset = relativeCameraOffset.applyMatrix4(this.player.matrixWorld);
 
-		// smooth camera position to target position
-		this.camera.position.lerp(cameraOffset, 0.2);
-		this.camera.lookAt(this.player.position);
+		// set camera position to target position
+		this.camera.position.set(cameraOffset.x, cameraOffset.y, cameraOffset.z);
+
+		// make camera look at player
+		this.camera.lookAt(this.player.position.x, this.player.position.y + 0.5, this.player.position.z);
 	}
 
 	update(time) {
@@ -264,10 +267,9 @@ class Scene {
 // Utilities
 
 function makeVideoMaterial(_id) {
-	let videoElement = document.getElementById(_id + "_video");
-	let videoTexture = new THREE.VideoTexture(videoElement);
-
-	let videoMaterial = new THREE.MeshBasicMaterial({
+	const videoElement = document.getElementById(_id + "_video");
+	const videoTexture = new THREE.VideoTexture(videoElement);
+	const videoMaterial = new THREE.MeshBasicMaterial({
 		map: videoTexture,
 		overdraw: true,
 		side: THREE.DoubleSide

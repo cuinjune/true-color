@@ -386,6 +386,12 @@ async function createLocalVideoElement() {
 		videoElement.autoplay = true;
 		videoElement.width = videoWidth;
 		videoElement.height = videoHeight;
+
+		// make it visible with the scene
+		videoElement.style.position = "absolute";
+		videoElement.style.left = "20px";
+		videoElement.style.bottom = "20px";
+
 		videoElement.oncanplaythrough = resolve;
 		videoElement.onerror = function () {
 			alert("Error: Failed to use the webcam.");
@@ -413,7 +419,7 @@ function createClientMediaElements(_id) {
 	document.body.appendChild(videoElement);
 
 	// create audio element for client
-	let audioEl = document.createElement("audio");
+	const audioEl = document.createElement("audio");
 	audioEl.setAttribute("id", _id + "_audio");
 	audioEl.controls = "controls";
 	audioEl.volume = 1;
@@ -428,7 +434,7 @@ function createClientMediaElements(_id) {
 function removeClientVideoElementAndCanvas(_id) {
 	console.log("Removing <video> element for client with id: " + _id);
 
-	let videoEl = document.getElementById(_id + "_video");
+	const videoEl = document.getElementById(_id + "_video");
 	if (videoEl != null) {
 		videoEl.remove();
 	}
