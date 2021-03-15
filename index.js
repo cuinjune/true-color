@@ -40,7 +40,6 @@ let iceServers = [
 
 let clients = {};
 let playerList = []; // existing player list in order (name: prize)
-let winners = ""; // used to store winners before announcing
 
 const ROUND_STATE = {
   noPlayerExists: 0,
@@ -68,6 +67,7 @@ let round = {
   prize: 1000,
   totalTime: 10,
   currentTime: 10,
+  winners: "",
   message: "",
   state: ROUND_STATE.noPlayerExists
 };
@@ -87,13 +87,12 @@ const ROUND_MESSAGE = {
   roundStarted: () => { return `Round ${round.currentNum} of ${round.totalNum} started!` },
   silence: "",
   roundFinished: () => { return `Round ${round.currentNum} of ${round.totalNum} finished!` },
-  announcingWinners: () => { return winners ? `Announcing the winners: ${winners}` : "No winner was found in this round." },
-  announcingFinalWinner: () => { return winners ? `Announcing the final winner: ${winners}` : "No final winner was found." }
+  announcingWinners: () => { return round.winners ? `Announcing the winners: ${round.winners}` : "No winner was found in this round." },
+  announcingFinalWinner: () => { return round.winners ? `Announcing the final winner: ${round.winners}` : "No final winner was found." }
 };
 
 let previousNumClients = 0;
 let startTime = 0;
-let previousWrappedTime = 0;
 let countDownStartTime = 0;
 let countDownPreviousWrappedTime = 0;
 let shouldCountDown = false;
@@ -138,7 +137,7 @@ function resetRound(numClients) {
     clients[_id].prize = 0;
   }
   updatePlayerList();
-  io.sockets.emit("updateGroundColor", round.colorIndex);
+  io.sockets.emit("updateGroundColor", [round.colorIndex]);
   restartRound();
 }
 
@@ -187,7 +186,7 @@ function main() {
       case ROUND_STATE.waitingForOtherPlayers:
         break;
       case ROUND_STATE.otherUserJoined:
-        if (elapsedTime > 10000) {
+        if (elapsedTime >= 10000) {
           round.state = ROUND_STATE.startingInstructions;
           round.message = ROUND_MESSAGE.startingInstructions;
           console.log(round.message);
@@ -196,7 +195,7 @@ function main() {
         }
         break;
       case ROUND_STATE.startingInstructions:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           round.state = ROUND_STATE.instruction1;
           round.message = ROUND_MESSAGE.instruction1;
           console.log(round.message);
@@ -205,7 +204,7 @@ function main() {
         }
         break;
       case ROUND_STATE.instruction1:
-        if (elapsedTime > 6000) {
+        if (elapsedTime >= 6000) {
           round.state = ROUND_STATE.instruction2;
           round.message = ROUND_MESSAGE.instruction2;
           console.log(round.message);
@@ -214,7 +213,7 @@ function main() {
         }
         break;
       case ROUND_STATE.instruction2:
-        if (elapsedTime > 7000) {
+        if (elapsedTime >= 7000) {
           round.state = ROUND_STATE.instruction3;
           round.message = ROUND_MESSAGE.instruction3;
           console.log(round.message);
@@ -223,7 +222,7 @@ function main() {
         }
         break;
       case ROUND_STATE.instruction3:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           round.state = ROUND_STATE.instruction4;
           round.message = ROUND_MESSAGE.instruction4;
           console.log(round.message);
@@ -232,7 +231,7 @@ function main() {
         }
         break;
       case ROUND_STATE.instruction4:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           round.state = ROUND_STATE.instruction5;
           round.message = ROUND_MESSAGE.instruction5;
           console.log(round.message);
@@ -241,7 +240,7 @@ function main() {
         }
         break;
       case ROUND_STATE.instruction5:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           resetRound(numClients);
           round.state = ROUND_STATE.startingNewRound;
           round.message = ROUND_MESSAGE.startingNewRound;
@@ -251,38 +250,37 @@ function main() {
         }
         break;
       case ROUND_STATE.startingNewRound:
-        if (elapsedTime > 3000) {
+        if (elapsedTime >= 3000) {
           round.state = ROUND_STATE.groundColorChanges;
           round.message = ROUND_MESSAGE.groundColorChanges;
           console.log(round.message);
           io.sockets.emit("roundStateChanged", round);
           startTime = Date.now();
-          previousWrappedTime = startTime;
+
+          // generate color indices and send to client (for animation)
+          const colorIndices = [];
+          for (let i = 0; i < 16; i++) {
+            let colorIndex = round.colorIndex;
+            while (colorIndex === round.colorIndex) {
+              colorIndex = Math.floor(Math.random() * 3);
+            }
+            round.colorIndex = colorIndex; // always different than previous color
+            colorIndices.push(round.colorIndex);
+          }
+          io.sockets.emit("updateGroundColor", colorIndices);
         }
         break;
       case ROUND_STATE.groundColorChanges:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           round.state = ROUND_STATE.roundStarted;
           round.message = ROUND_MESSAGE.roundStarted();
           console.log(round.message);
           io.sockets.emit("roundStateChanged", round);
           startTime = Date.now();
         }
-        else if (elapsedTime < 4000) { // change ground color rapidly
-          const wrappedTime = elapsedTime % 250;
-          if (wrappedTime < previousWrappedTime) { // called periodically
-            let colorIndex = round.colorIndex;
-            while (colorIndex === round.colorIndex) {
-              colorIndex = Math.floor(Math.random() * 3);
-            }
-            round.colorIndex = colorIndex; // always different than previous color
-            io.sockets.emit("updateGroundColor", round.colorIndex);
-          }
-          previousWrappedTime = wrappedTime;
-        }
         break;
       case ROUND_STATE.roundStarted:
-        if (elapsedTime > 3000) {
+        if (elapsedTime >= 3000) {
           round.state = ROUND_STATE.silence;
           round.message = ROUND_MESSAGE.silence;
           console.log(round.message);
@@ -299,7 +297,7 @@ function main() {
       case ROUND_STATE.silence:
         break;
       case ROUND_STATE.roundFinished:
-        if (elapsedTime > 3000) {
+        if (elapsedTime >= 3000) {
           updatePlayerList();
           round.state = ROUND_STATE.announcingWinners;
           round.message = ROUND_MESSAGE.announcingWinners();
@@ -309,7 +307,7 @@ function main() {
         }
         if (shouldCountDown) { // stop count down
           // store winners and distribute prize
-          winners = "";
+          round.winners = "";
           let winnerIds = [];
           for (const _id in clients) {
             if (clients[_id].colorIndex === round.colorIndex) {
@@ -320,27 +318,27 @@ function main() {
           let prizePerWinner = Math.floor(round.prize / numWinners);
           if (numWinners === numClients) { // if everybody won, double the prize per winner
             prizePerWinner *= 2;
-            winners = "Everyone! (2x bonus)";
+            round.winners = "Everyone! (2x bonus)";
             for (const _id of winnerIds) {
               clients[_id].prize += prizePerWinner;
             }
           }
           else {
             for (const _id of winnerIds) {
-              winners += `${clients[_id].name}, `;
+              round.winners += `${clients[_id].name}, `;
               clients[_id].prize += prizePerWinner;
             }
-            if (winners) {
-              winners = winners.slice(0, -2);
+            if (round.winners) {
+              round.winners = round.winners.slice(0, -2);
             }
           }
           shouldCountDown = false;
         }
         break;
       case ROUND_STATE.announcingWinners:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           if (round.currentNum === round.totalNum) { // if it was last round, announce final winner
-            winners = "";
+            round.winners = "";
             let winnerNames = [];
             let previousPrize = 0;
             for (const player of playerList) {
@@ -353,14 +351,14 @@ function main() {
               }
             }
             if (winnerNames.length === playerList.length) {
-              winners = "Everyone!";
+              round.winners = "Everyone!";
             }
             else {
               for (const name of winnerNames) {
-                winners += `${name}, `;
+                round.winners += `${name}, `;
               }
-              if (winners) {
-                winners = winners.slice(0, -2);
+              if (round.winners) {
+                round.winners = round.winners.slice(0, -2);
               }
             }
             round.state = ROUND_STATE.announcingFinalWinner;
@@ -383,7 +381,7 @@ function main() {
         }
         break;
       case ROUND_STATE.announcingFinalWinner:
-        if (elapsedTime > 5000) {
+        if (elapsedTime >= 5000) {
           resetRound(numClients); // reset round
           round.state = ROUND_STATE.startingNewRound;
           round.message = ROUND_MESSAGE.startingNewRound;

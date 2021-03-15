@@ -68,6 +68,12 @@ const ROUND_STATE = {
 	announcingFinalWinner: 15
 };
 
+// audio files
+const blipSound = new Audio("assets/blip.wav");
+const announceSound = new Audio("assets/announce.wav");
+blipSound.volume = 0.5;
+announceSound.volume = 0.5;
+
 // text to speech synth
 const ttsSynth = window.speechSynthesis;
 
@@ -81,9 +87,9 @@ function playerColorChanged() {
 		messageInfo.innerText = message;
 		const utterThis = new SpeechSynthesisUtterance(message);
 		utterThis.lang = "en-US";
-		utterThis.volume = 0.25;
+		utterThis.volume = 0.35;
 		ttsSynth.speak(utterThis);
-		
+
 		// clear message after 1.5 seconds
 		if (clearMessageTimer) {
 			clearTimeout(clearMessageTimer);
@@ -192,8 +198,18 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 	});
 
 	// update ground color
-	socket.on("updateGroundColor", _colorIndex => {
-		glScene.updateGroundColor(_colorIndex);
+	socket.on("updateGroundColor", _colorIndices => {
+		function playBlipSound() {
+			if (_colorIndices[0] !== 3) {
+				blipSound.play();
+			}
+			glScene.updateGroundColor(_colorIndices[0]);
+			_colorIndices.shift();
+			if (_colorIndices.length) {
+				setTimeout(playBlipSound, 250);
+			}
+		}
+		setTimeout(playBlipSound, 500);
 	});
 
 	// update current time
@@ -237,6 +253,20 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 			utterThis.lang = "en-US";
 			utterThis.volume = 0.5;
 			ttsSynth.speak(utterThis);
+		}
+
+		// playing audio files
+		if (_round.state === ROUND_STATE.announcingWinners && _round.winners) {
+			function playAnnounceSound() {
+				announceSound.play();
+			}
+			setTimeout(playAnnounceSound, 1600);
+		}
+		else if (_round.state === ROUND_STATE.announcingFinalWinner && _round.winners) {
+			function playAnnounceSound() {
+				announceSound.play();
+			}
+			setTimeout(playAnnounceSound, 1900);
 		}
 	});
 
