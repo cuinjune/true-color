@@ -1,5 +1,5 @@
 class Scene {
-	constructor(_domElement, _width, _height, _clearColor, _controls, _socket, _initPlayerPosition, _colorIndex) {
+	constructor(_domElement, _width, _height, _clearColor, _controls, _socket, _initPlayerPosition, _colorIndex, _colorChangedCallback) {
 		// player control
 		this.controls = _controls;
 
@@ -44,6 +44,9 @@ class Scene {
 
 		// initial color index
 		this.colorIndex = _colorIndex;
+
+		// playerColorChanged function callback
+		this.colorChangedCallback = _colorChangedCallback;
 
 		// add lights
 		const light = new THREE.HemisphereLight(new THREE.Color(1, 1, 1), new THREE.Color(0.75, 0.75, 0.75), 1);
@@ -207,6 +210,7 @@ class Scene {
 			this.colorIndex = (this.colorIndex + 1) % 3;
 			this.player.material.color.setHex(this.colors[this.colorIndex].getHex());
 			this.socket.emit("colorIndex", this.colorIndex);
+			this.colorChangedCallback();
 			this.controls.shouldChangeColor = false;
 		}
 	}

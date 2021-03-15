@@ -46,16 +46,19 @@ const ROUND_STATE = {
   noPlayerExists: 0,
   waitingForOtherPlayers: 1,
   otherUserJoined: 2,
-  startingNewRound: 3,
-  groundColorChanges: 4,
-  roundStarted: 5,
-  instruction1: 6,
-  instruction2: 7,
-  instruction3: 8,
-  silence: 9,
-  roundFinished: 10,
-  announcingWinners: 11,
-  announcingFinalWinner: 12
+  startingInstructions: 3,
+  instruction1: 4,
+  instruction2: 5,
+  instruction3: 6,
+  instruction4: 7,
+  instruction5: 8,
+  startingNewRound: 9,
+  groundColorChanges: 10,
+  roundStarted: 11,
+  silence: 12,
+  roundFinished: 13,
+  announcingWinners: 14,
+  announcingFinalWinner: 15
 };
 
 let round = {
@@ -73,16 +76,19 @@ const ROUND_MESSAGE = {
   noPlayerExists: "",
   waitingForOtherPlayers: "Waiting for other players to join...",
   otherUserJoined: "A new player just joined, the game will start soon...",
+  startingInstructions: "Now we have all the players in the room, here's how this game works.",
+  instruction1: "The objective of the game is to match your body color to the ground color at the end of each round.",
+  instruction2: "Each player can't see one's own body color but only the other players'. So the players need to talk to each other.",
+  instruction3: "You can change your body color by clicking your left mouse button.",
+  instruction4: "After each round, prize money will be distributed to the winners.",
+  instruction5: "Now the game will start, have fun!",
   startingNewRound: "Starting a new round...",
   groundColorChanges: "Setting the ground color...",
-  roundStarted: () => { return `Round ${round.currentNum} / ${round.totalNum} started!` },
-  instruction1: "Match your body color to the ground color by asking other players by the end of the round.",
-  instruction2: "You can change your body color by clicking your left mouse button.",
-  instruction3: "After each round, the prize money will be distributed to the winner(s).",
+  roundStarted: () => { return `Round ${round.currentNum} of ${round.totalNum} started!` },
   silence: "",
-  roundFinished: () => { return `Round ${round.currentNum} / ${round.totalNum} finished!` },
-  announcingWinners: () => { return winners ? `Announcing the winner(s): ${winners}` : "No winner was found in this round." },
-  announcingFinalWinner: () => { return winners ? `Announcing the final winner(s): ${winners}` : "No final winner was found." }
+  roundFinished: () => { return `Round ${round.currentNum} of ${round.totalNum} finished!` },
+  announcingWinners: () => { return winners ? `Announcing the winners: ${winners}` : "No winner was found in this round." },
+  announcingFinalWinner: () => { return winners ? `Announcing the final winner: ${winners}` : "No final winner was found." }
 };
 
 let previousNumClients = 0;
@@ -174,6 +180,7 @@ function main() {
       previousNumClients = numClients;
     }
 
+    // tracking elapsedTime after startTime was set
     const elapsedTime = Date.now() - startTime;
 
     switch (round.state) {
@@ -181,6 +188,60 @@ function main() {
         break;
       case ROUND_STATE.otherUserJoined:
         if (elapsedTime > 10000) {
+          round.state = ROUND_STATE.startingInstructions;
+          round.message = ROUND_MESSAGE.startingInstructions;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.startingInstructions:
+        if (elapsedTime > 5000) {
+          round.state = ROUND_STATE.instruction1;
+          round.message = ROUND_MESSAGE.instruction1;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.instruction1:
+        if (elapsedTime > 6000) {
+          round.state = ROUND_STATE.instruction2;
+          round.message = ROUND_MESSAGE.instruction2;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.instruction2:
+        if (elapsedTime > 7000) {
+          round.state = ROUND_STATE.instruction3;
+          round.message = ROUND_MESSAGE.instruction3;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.instruction3:
+        if (elapsedTime > 5000) {
+          round.state = ROUND_STATE.instruction4;
+          round.message = ROUND_MESSAGE.instruction4;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.instruction4:
+        if (elapsedTime > 5000) {
+          round.state = ROUND_STATE.instruction5;
+          round.message = ROUND_MESSAGE.instruction5;
+          console.log(round.message);
+          io.sockets.emit("roundStateChanged", round);
+          startTime = Date.now();
+        }
+        break;
+      case ROUND_STATE.instruction5:
+        if (elapsedTime > 5000) {
           resetRound(numClients);
           round.state = ROUND_STATE.startingNewRound;
           round.message = ROUND_MESSAGE.startingNewRound;
@@ -190,7 +251,7 @@ function main() {
         }
         break;
       case ROUND_STATE.startingNewRound:
-        if (elapsedTime > 5000) {
+        if (elapsedTime > 3000) {
           round.state = ROUND_STATE.groundColorChanges;
           round.message = ROUND_MESSAGE.groundColorChanges;
           console.log(round.message);
@@ -222,8 +283,8 @@ function main() {
         break;
       case ROUND_STATE.roundStarted:
         if (elapsedTime > 3000) {
-          round.state = ROUND_STATE.instruction1;
-          round.message = ROUND_MESSAGE.instruction1;
+          round.state = ROUND_STATE.silence;
+          round.message = ROUND_MESSAGE.silence;
           console.log(round.message);
           io.sockets.emit("roundStateChanged", round);
           startTime = Date.now();
@@ -233,33 +294,6 @@ function main() {
           round.currentTime = round.totalTime;
           countDownStartTime = Date.now();
           countDownPreviousWrappedTime = countDownStartTime;
-        }
-        break;
-      case ROUND_STATE.instruction1:
-        if (elapsedTime > 5000) {
-          round.state = ROUND_STATE.instruction2;
-          round.message = ROUND_MESSAGE.instruction2;
-          console.log(round.message);
-          io.sockets.emit("roundStateChanged", round);
-          startTime = Date.now();
-        }
-        break;
-      case ROUND_STATE.instruction2:
-        if (elapsedTime > 5000) {
-          round.state = ROUND_STATE.instruction3;
-          round.message = ROUND_MESSAGE.instruction3;
-          console.log(round.message);
-          io.sockets.emit("roundStateChanged", round);
-          startTime = Date.now();
-        }
-        break;
-      case ROUND_STATE.instruction3:
-        if (elapsedTime > 5000) {
-          round.state = ROUND_STATE.silence;
-          round.message = ROUND_MESSAGE.silence;
-          console.log(round.message);
-          io.sockets.emit("roundStateChanged", round);
-          startTime = Date.now();
         }
         break;
       case ROUND_STATE.silence:

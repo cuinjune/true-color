@@ -4,8 +4,13 @@
 <head>
   <title>True Color</title>
   <meta charset=utf-8 />
+  <meta name="description" content="A 3d online multiplayer game where the goal of the game is to match one's own unknown body color to the ground color by talking to other players" />
+    <meta name="keywords" content="True Color, 3d, Online, Multiplayer, Game" />
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
   <link rel="stylesheet" href="css/main.css" type="text/css" />
+  <link
+    href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAACi0PoA+qiiAPqi1QCi+qgAoqL6APGi+gDz+qIAovj6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARAB3MxFmIlVEAHczEWYiVUQAdzMRZiJVRAB3MxFmIlVEAHczEWYiVUQAdzMRZiJVRAB3MxFmIlVEAHczEWYiVUQAdzMRZiJVRAB3MxFmIlVEAHczEWYiVUQAdzMRZiJVRAB3MxFmIlVEAHczEWYiVUQAdzMRZiJVRAB3MxFmIlUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    rel="icon" type="image/x-icon" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.1/socket.io.js"
     integrity="sha512-oFOCo2/3DtjrJG4N27BjSLQWoiBv171sK6a+JiWjp/7agxC2nCUP358AqzxkBUb5jX8g6CYLPdSKQTbC0weCwA=="
     crossorigin="anonymous"></script>
@@ -16,15 +21,13 @@
 </head>
 
 <body>
-  <div id="infopanel">
+  <div id="infopanel" class="unselectable">
     <div id="infopanel_round">
       <div id="infopanel_round_col1" class="infopanel_round_col"></div>
       <div id="infopanel_round_col2" class="infopanel_round_col"></div>
       <div id="infopanel_round_col3" class="infopanel_round_col"></div>
     </div>
-    <div id="infopanel_message">
-      <div id="infopanel_message_row1"></div>
-    </div>
+    <div id="infopanel_message"></div>
     <div id="infopanel_players">
       <div id="infopanel_players_col1">
         <div id="infopanel_players_title"></div>

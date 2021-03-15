@@ -34,6 +34,69 @@ let mediaConstraints = {
 	},
 };
 
+// infopanel elements
+const roundInfo = document.getElementById("infopanel_round_col1");
+const timeInfo = document.getElementById("infopanel_round_col2");
+const prizeInfo = document.getElementById("infopanel_round_col3");
+const messageInfo = document.getElementById("infopanel_message");
+const playersInfoTitle = document.getElementById("infopanel_players_title");
+const playersInfoContainer = document.getElementById("infopanel_players_rows");
+
+// create dollar formatter.
+const dollarFormatter = new Intl.NumberFormat("en-US", {
+	style: "currency",
+	currency: "USD",
+});
+
+// round state (should be identical to node server)
+const ROUND_STATE = {
+	noPlayerExists: 0,
+	waitingForOtherPlayers: 1,
+	otherUserJoined: 2,
+	startingInstructions: 3,
+	instruction1: 4,
+	instruction2: 5,
+	instruction3: 6,
+	instruction4: 7,
+	instruction5: 8,
+	startingNewRound: 9,
+	groundColorChanges: 10,
+	roundStarted: 11,
+	silence: 12,
+	roundFinished: 13,
+	announcingWinners: 14,
+	announcingFinalWinner: 15
+};
+
+// text to speech synth
+const ttsSynth = window.speechSynthesis;
+
+// clear messeage timer
+let clearMessageTimer = null;
+
+// called when player's body color changes
+function playerColorChanged() {
+	if (ttsSynth && !ttsSynth.speaking) {
+		const message = "Body color changed.";
+		messageInfo.innerText = message;
+		const utterThis = new SpeechSynthesisUtterance(message);
+		utterThis.lang = "en-US";
+		utterThis.volume = 0.25;
+		ttsSynth.speak(utterThis);
+		
+		// clear message after 1.5 seconds
+		if (clearMessageTimer) {
+			clearTimeout(clearMessageTimer);
+		}
+		clearMessageTimer = setTimeout(function () {
+			if (!ttsSynth.speaking) {
+				messageInfo.innerText = "";
+			}
+			clearMessageTimer = null;
+		}, 1500);
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Local media stream setup
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,37 +196,6 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 		glScene.updateGroundColor(_colorIndex);
 	});
 
-	// infopanel elements
-	const roundInfo = document.getElementById("infopanel_round_col1");
-	const timeInfo = document.getElementById("infopanel_round_col2");
-	const prizeInfo = document.getElementById("infopanel_round_col3");
-	const messageInfo = document.getElementById("infopanel_message_row1");
-	const playersInfoTitle = document.getElementById("infopanel_players_title");
-	const playersInfoContainer = document.getElementById("infopanel_players_rows");
-
-	// create dollar formatter.
-	const dollarFormatter = new Intl.NumberFormat("en-US", {
-		style: "currency",
-		currency: "USD",
-	});
-
-	// round state (should be identical to node server)
-	const ROUND_STATE = {
-		noPlayerExists: 0,
-		waitingForOtherPlayers: 1,
-		otherUserJoined: 2,
-		startingNewRound: 3,
-		groundColorChanges: 4,
-		roundStarted: 5,
-		instruction1: 6,
-		instruction2: 7,
-		instruction3: 8,
-		silence: 9,
-		roundFinished: 10,
-		announcingWinners: 11,
-		announcingFinalWinner: 12
-	};
-
 	// update current time
 	socket.on("updateCurrentTime", _currentTime => {
 		timeInfo.innerText = `Time: ${_currentTime}`;
@@ -186,7 +218,7 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 
 	// receive round data whenever state changes
 	socket.on("roundStateChanged", _round => {
-		if (_round.state === ROUND_STATE.waitingForOtherPlayers || _round.state === ROUND_STATE.otherUserJoined) {
+		if (_round.state < ROUND_STATE.startingNewRound) {
 			roundInfo.innerText = "";
 			timeInfo.innerText = "";
 			prizeInfo.innerText = "";
@@ -197,6 +229,15 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 			prizeInfo.innerText = `Prize: ${dollarFormatter.format(_round.prize).slice(0, -3)}`;
 		}
 		messageInfo.innerText = _round.message;
+		if (ttsSynth && _round.message) {
+			if (ttsSynth.speaking) { // cancel previous speaking
+				ttsSynth.cancel();
+			}
+			const utterThis = new SpeechSynthesisUtterance(_round.message);
+			utterThis.lang = "en-US";
+			utterThis.volume = 0.5;
+			ttsSynth.speak(utterThis);
+		}
 	});
 
 	socket.on("call-made", async (data) => {
@@ -356,7 +397,7 @@ function enableOutgoingStream() {
 // three.js
 ////////////////////////////////////////////////////////////////////////////////
 
-function createScene(initPlayerPosition, colorIndex) {
+function createScene(initPlayerPosition, colorIndex, colorChangedCallback) {
 	// initialize three.js scene
 	console.log("Creating three.js scene...");
 	glScene = new Scene(
@@ -367,7 +408,8 @@ function createScene(initPlayerPosition, colorIndex) {
 		_controls = controls,
 		_socket = socket,
 		_initPlayerPosition = initPlayerPosition,
-		_colorIndex = colorIndex);
+		_colorIndex = colorIndex,
+		_colorChangedCallback = colorChangedCallback);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -468,7 +510,7 @@ async function startButtonClicked() {
 				addPointerLock();
 
 				// finally create the threejs scene
-				createScene(initPlayerPosition, colorIndex);
+				createScene(initPlayerPosition, colorIndex, playerColorChanged);
 
 				// click to play
 				document.getElementById("instructions_title").innerText = "Click to play";
