@@ -60,11 +60,11 @@ const ROUND_STATE = {
 
 let round = {
   colorIndex: 3,
-  totalNum: 10, // fixed
+  totalNum: 5, // fixed
   currentNum: 1,
   prize: 1000,
-  totalTime: 60, // fixed
-  currentTime: 60,
+  totalTime: 10,
+  currentTime: 10,
   message: "",
   state: ROUND_STATE.noPlayerExists
 };
@@ -119,19 +119,20 @@ function restartRound() {
   shouldCountDown = false; // just in case the countdown was not properly stopped
 }
 
-function resetRound() {
+function resetRound(numClients) {
   console.log("resetting round...");
   round.colorIndex = 3;
-  round.totalNum = 10;
+  round.totalNum = 5;
   round.currentNum = 1;
-  round.prize = 1000;
-  round.totalTime = 60;
-  round.currentTime = 60;
+  round.prize = 1000 * numClients;
+  round.totalTime = 10 * numClients;
+  round.currentTime = round.totalTime;
   round.message = "";
   for (const _id in clients) {
     clients[_id].prize = 0;
   }
   updatePlayerList();
+  io.sockets.emit("updateGroundColor", round.colorIndex);
   restartRound();
 }
 
@@ -180,7 +181,7 @@ function main() {
         break;
       case ROUND_STATE.otherUserJoined:
         if (elapsedTime > 10000) {
-          resetRound();
+          resetRound(numClients);
           round.state = ROUND_STATE.startingNewRound;
           round.message = ROUND_MESSAGE.startingNewRound;
           console.log(round.message);
@@ -265,6 +266,7 @@ function main() {
         break;
       case ROUND_STATE.roundFinished:
         if (elapsedTime > 3000) {
+          updatePlayerList();
           round.state = ROUND_STATE.announcingWinners;
           round.message = ROUND_MESSAGE.announcingWinners();
           console.log(round.message);
@@ -298,7 +300,6 @@ function main() {
               winners = winners.slice(0, -2);
             }
           }
-          updatePlayerList();
           shouldCountDown = false;
         }
         break;
@@ -309,7 +310,7 @@ function main() {
             let winnerNames = [];
             let previousPrize = 0;
             for (const player of playerList) {
-              if (player.prize && player.prize === previousPrize) {
+              if (player.prize && (!previousPrize || player.prize === previousPrize)) {
                 winnerNames.push(player.name);
                 previousPrize = player.prize;
               }
@@ -349,7 +350,7 @@ function main() {
         break;
       case ROUND_STATE.announcingFinalWinner:
         if (elapsedTime > 5000) {
-          resetRound(); // reset round
+          resetRound(numClients); // reset round
           round.state = ROUND_STATE.startingNewRound;
           round.message = ROUND_MESSAGE.startingNewRound;
           console.log(round.message);

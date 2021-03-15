@@ -178,7 +178,7 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 			for (player of _playerList) {
 				const playerInfoDiv = document.createElement("div");
 				playerInfoDiv.className = "infopanel_players_row";
-				playerInfoDiv.innerText = `${player.name}: ${dollarFormatter.format(player.prize)}`;
+				playerInfoDiv.innerText = `${player.name}: ${dollarFormatter.format(player.prize).slice(0, -3)}`;
 				playersInfoContainer.appendChild(playerInfoDiv);
 			}
 		}
@@ -194,7 +194,7 @@ function initSocketConnection(playerName, colorIndex, initPlayerPosition) {
 		else {
 			roundInfo.innerText = `Round: ${_round.currentNum} / ${_round.totalNum}`;
 			timeInfo.innerText = `Time: ${_round.currentTime}`;
-			prizeInfo.innerText = `Prize: ${dollarFormatter.format(_round.prize)}`;
+			prizeInfo.innerText = `Prize: ${dollarFormatter.format(_round.prize).slice(0, -3)}`;
 		}
 		messageInfo.innerText = _round.message;
 	});

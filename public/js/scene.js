@@ -86,7 +86,7 @@ class Scene {
 
 		// head
 		const head = new THREE.Mesh(new THREE.SphereGeometry(headRadius, 8, 8), videoMaterial);
-		head.rotation.y = THREE.Math.degToRad(90);
+		head.rotation.y = THREE.Math.degToRad(60); // note: why should this be 60 degrees?
 		head.position.y = bodyHeightHalf + headRadius - 0.05;
 		body.add(head);
 
