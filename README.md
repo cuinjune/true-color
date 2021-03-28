@@ -6,7 +6,7 @@ True Color is a 3d multiplayer game where the goal of the game is to match one's
 
 In the game, each player cannot see one's body color because it's a first-person view. So the players need to talk to each other to find out their colors. Players can change their body color by clicking on the mouse button, and after each round, prize money will be distributed to the winners.
 
-Here's the [Live Demo on Heroku](https://true-color.herokuapp.com/).
+Here's the [Live Demo on Heroku](https://true-color.herokuapp.com/). (Requires two or more players to start the game)
 
 ## Process & Thoughts
 For my final project, I wanted to create a 3d multiplayer game. And my initial idea was to create a simple 3rd-person multiplayer game called [Battle Square](https://github.com/cuinjune/battle-square) where players can hit each other in 3d space. But later, I thought this isn't fun as a game, and there was no point in sharing the webcam and audio between players because the only important interaction was simply hitting each other. And also, there were already many existing games with similar concepts.
@@ -20,7 +20,6 @@ I created the first version of the game and did some user testing with some of m
 In the future, I would like to further work on improving the overall quality of the app including designing the background area by adding objects that players can interact with. And I think these objects can be used to provide some clues for players to guess their body colors.
 
 ## How to play
-* Requires 2 or more players to make the game start.
 * Enter the player name and press the start button.
 * `W, A, S, D` keys move the player forward, left, backward, and right.
 * `Space` key makes the player jump.
