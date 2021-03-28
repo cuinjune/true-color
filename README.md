@@ -2,7 +2,8 @@
 <img src="screenshot.png" alt="screenshot" width="1000"/>
 
 ## Description
-True Color is a 3d multiplayer game where the goal of the game is to match one's own unknown body color to the ground color by talking to other players.  
+True Color is a 3d multiplayer game where the goal of the game is to match one's own unknown body color to the ground color by talking to other players.
+
 In the game, each player cannot see one's body color because it's a first-person view. So the players need to talk to each other to find out their colors. Players can change their body color by clicking on the mouse button, and after each round, prize money will be distributed to the winners.
 
 Here's the [Live Demo on Heroku](https://true-color.herokuapp.com/).
