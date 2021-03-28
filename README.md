@@ -19,15 +19,6 @@ I created the first version of the game and did some user testing with some of m
 
 In the future, I would like to further work on improving the overall quality of the app including designing the background area by adding objects that players can interact with. And I think these objects can be used to provide some clues for players to guess their body colors.
 
-## How to play
-* Enter the player name and press the start button.
-* `W, A, S, D` keys move the player forward, left, backward, and right.
-* `Space` key makes the player jump.
-* `Mouse` movement makes the player look around.
-* `Click` changes the player's own unknown body color.
-* `Esc` unlocks the mouse cursor.
-* Follow the guide when the game starts.
-
 ## Future plans
 * Add name labels above each player's head.
 * Design the background area. (e.g. walls, boxes)
